@@ -162,3 +162,6 @@ cython_debug/
 #.idea/
 
 conda_env.yml
+data/
+wandb/
+temp_index.db
