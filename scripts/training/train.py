@@ -161,14 +161,14 @@ def main():
     callbacks = []
     if args.enable_checkpointing:
         checkpoint_dir = f"checkpoints/{args.run_name}/"
-        callbacks.append(ModelCheckpoint(
-            monitor=args.checkpoint_metric,
-            dirpath=checkpoint_dir,
-            filename="ep{epoch:02d}_{" + args.checkpoint_metric + ":.2f}f1",
-            save_top_k=args.checkpoint_save_count,
-            mode="max",
-            auto_insert_metric_name=False
-        ))
+        callbacks.append(
+            ModelCheckpoint(
+                dirpath=checkpoint_dir,
+                filename="ep_{epoch:02d}",
+                every_n_epochs=1,
+                save_top_k=-1,
+            )
+        )
     else:
         assert not args.run_final_mwe_eval, "Can't run final MWE eval with checkpointing disabled"
 
