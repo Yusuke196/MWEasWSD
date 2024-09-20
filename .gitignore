@@ -162,6 +162,9 @@ cython_debug/
 #.idea/
 
 conda_env.yml
+temp_index.db
 data/
 wandb/
-temp_index.db
+checkpoints/
+dca/
+dca-ft/

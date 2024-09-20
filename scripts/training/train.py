@@ -5,6 +5,7 @@ from distutils.util import strtobool
 import sys
 import shutil
 from pathlib import Path
+import time
 
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks.stochastic_weight_avg import StochasticWeightAveraging
@@ -160,7 +161,7 @@ def main():
 
     callbacks = []
     if args.enable_checkpointing:
-        checkpoint_dir = f"checkpoints/{args.run_name}/"
+        checkpoint_dir = f'checkpoints/{args.run_name}/{time.strftime("%Y%m%d-%H%M%S")}/'
         callbacks.append(
             ModelCheckpoint(
                 dirpath=checkpoint_dir,
