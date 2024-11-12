@@ -510,11 +510,11 @@ DATASET_TUPLE_DICT = {
         DimSumMWEEvaluator,
     ),
     MWEEvalData.COAM_TRAIN: (
-        Path('../data/50_mweaswsd/coam_train.tanner.jsonl'),
+        Path('../data/60_mweaswsd/coam_train.tanner.jsonl'),
         DimSumMWEEvaluator,
     ),
     MWEEvalData.COAM_TEST: (
-        Path('../data/50_mweaswsd/coam_test.tanner.jsonl'),
+        Path('../data/60_mweaswsd/coam_test.tanner.jsonl'),
         DimSumMWEEvaluator,
     ),
 }
