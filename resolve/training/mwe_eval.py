@@ -83,22 +83,9 @@ class MWEEvaluator:
         sent_results = self.pipeline(sentence)
         predicted_labels = [0] * len(sentence)
         touched_ids = set()
-        for found_mwe in sent_results:
-            word_mwe_ids = [w.mwe_sense_data.item_id for w in found_mwe.words if w.mwe_sense_data]
-            most_common_id = Counter(word_mwe_ids).most_common(1)
-
-            # in the case of no overlap with any MWE, choose an ID <-1 which is guaranteed to be wrong
-            # item IDs start from 0, but 0 is the negative label
-            mwe_id = most_common_id[0][0] + 1 if len(most_common_id) > 0 else next(mismatch_label_iter)
-            if mwe_id < 0:
-                false_positives.append((found_mwe.words, found_mwe.mwe_data.lemma))
-            else:
-                touched_ids.add(mwe_id)
-                if len(set(word_mwe_ids)) > 1:
-                    partial_mismatch.append((found_mwe.words, found_mwe.mwe_data.lemma))
-
+        for mwe_id, found_mwe in enumerate(sent_results):
             for word in found_mwe.words:
-                predicted_labels[word.idx] = mwe_id
+                predicted_labels[word.idx] = mwe_id + 1
                 word.mwe_candidate = found_mwe
 
         # item IDs start from 0, but 0 is the negative label
@@ -111,27 +98,6 @@ class MWEEvaluator:
              for missed in missed_ids)
         ]
         assert all(len(x) > 0 for x in false_negatives), 'False negatives must be properly found'
-
-        if self.examples:
-            for name, examples in (('fn', false_negatives), ('fp', false_positives), ('mix', partial_mismatch)):
-                for words, lemma in examples:
-                    present_mwes = [
-                        (sense_data.lemma, tuple(str(w.idx) for w in words))
-                        for sense_data, words in sentence.get_mwe_groups()
-                    ]
-                    index_str = f'({",".join(str(w.idx) for w in words)})'
-                    cleaned_text = re.sub(r'\s', ' ', sentence.original_text)
-                    outstr = f'{name}\t{lemma}\t{index_str}\t{cleaned_text}\t{present_mwes}\n'
-                    self.example_file.write(outstr)
-
-        if self.printing:
-            for predicted_label, gold_label, word in zip(predicted_labels, gold_labels, sentence):
-                gold_lemma = '_' if not word.mwe_sense_data else word.mwe_sense_data.lemma
-                predicted_lemma = '_' if not hasattr(word, 'mwe_candidate') else word.mwe_candidate.mwe_data.lemma
-                output_row = [word.form, word.word_sense_data.pos, predicted_lemma, gold_lemma,
-                              str(predicted_label), str(gold_label)]
-                self.file.write('\t'.join(output_row) + '\n')
-            self.file.write('\n\n')
 
         return EvalLabels(predicted_labels, gold_labels, sent_results.eval_data, sent_results,
                           false_negatives, false_positives, partial_mismatch)
