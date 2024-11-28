@@ -113,7 +113,7 @@ def main():
     parser.add_argument('--upsample_train_data', type=int, nargs='+')
     parser.add_argument('--limit_key_candidates', type=str_to_bool, default='True')
     parser.add_argument('--checkpoint_save_count', type=int, default=3)
-    parser.add_argument('--seed', type=int, default=1337)
+    parser.add_argument('--seed', type=int, default=None)
 
     known_args, _ = parser.parse_known_args()
     hyperparameters = (set(vars(known_args)) | {
@@ -133,7 +133,8 @@ def main():
 
     Trainer.add_argparse_args(parser)
     args = Trainer.parse_argparser(parser.parse_args())
-    seed_everything(args.seed)
+    if args.seed is not None:
+        seed_everything(args.seed)
     print(f'--------BEGINNING RUN {args.run_name}--------')
     if args.limit_key_candidates:
         use_only_candidate_wordnet()
