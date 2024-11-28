@@ -58,6 +58,7 @@ def main():
     if args.output:
         filename = args.output
 
+    Path(filename).parent.mkdir(parents=True, exist_ok=True)
     with open(filename, 'w') as outfile:
         outfile.writelines(iterator)
 
