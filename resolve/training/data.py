@@ -71,6 +71,10 @@ def read_training_sentences(file_path: Path, manager: Optional[TrainingDefinitio
 
 
 class SenseData:
+    """
+    Attributes:
+        gold_sense (Optional[str]): The gold sense key, e.g., 'point_out%2:32:01::'
+    """
     __slots__ = ['key_id', 'gold_sense_idx', 'ignored', 'lemma', 'pos', 'item_id', 'gold_sense', '_metadata']
 
     @property
@@ -183,6 +187,7 @@ class SenseData:
         if WordnetDefinitionLookup.candidates_fixed():
             return WordnetDefinitionLookup.key_for_synset(self.lemma, self.pos, synset)
 
+        # lemma_candidates is a list of Lemma (nltk.corpus.reader.wordnet.Lemma) object
         lemma_candidates = [
             lemma for lemma in synset.lemmas() if lemma.name().lower() == self.lemma.lower()
         ]
