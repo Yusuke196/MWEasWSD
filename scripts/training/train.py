@@ -5,6 +5,7 @@ from distutils.util import strtobool
 import sys
 import shutil
 from pathlib import Path
+from datetime import datetime
 
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks.stochastic_weight_avg import StochasticWeightAveraging
@@ -12,7 +13,7 @@ from pytorch_lightning.callbacks.stochastic_weight_avg import StochasticWeightAv
 from resolve.common.data import WordnetDefinitionLookup
 from resolve.common.util import yaml_to_dict
 from resolve.training import DRY_RUN_DATA, DEFAULT_PLUS_OMSTI_DATA, DEFAULT_DATA, CUPT_DATA, DIMSUM_DATA, \
-    MIXED_FINETUNE, MIXED_TRAIN, WSD_PATH
+    MIXED_FINETUNE, MIXED_TRAIN, WSD_PATH, COAM_FINETUNE
 from resolve.training.data import DefinitionMatchingDataset, DefinitionMatchingFixedCountBatchDataset, \
     DefinitionMatchingLoader, wsd_candidates, use_only_candidate_wordnet
 from resolve.model.pl_module import ContextDictionaryBiEncoder
@@ -38,7 +39,8 @@ data_choices = {
     'cupt': CUPT_DATA,
     'dimsum': DIMSUM_DATA,
     'mixed_finetune': MIXED_FINETUNE,
-    'mixed_train': MIXED_TRAIN
+    'mixed_train': MIXED_TRAIN,
+    'coam_finetune': COAM_FINETUNE,
 }
 
 language_choices = [
@@ -111,7 +113,7 @@ def main():
     parser.add_argument('--upsample_train_data', type=int, nargs='+')
     parser.add_argument('--limit_key_candidates', type=str_to_bool, default='True')
     parser.add_argument('--checkpoint_save_count', type=int, default=3)
-    parser.add_argument('--seed', type=int, default=1337)
+    parser.add_argument('--seed', type=int, default=None)
 
     known_args, _ = parser.parse_known_args()
     hyperparameters = (set(vars(known_args)) | {
@@ -131,7 +133,8 @@ def main():
 
     Trainer.add_argparse_args(parser)
     args = Trainer.parse_argparser(parser.parse_args())
-    seed_everything(args.seed)
+    if args.seed is not None:
+        seed_everything(args.seed)
     print(f'--------BEGINNING RUN {args.run_name}--------')
     if args.limit_key_candidates:
         use_only_candidate_wordnet()
@@ -159,15 +162,16 @@ def main():
 
     callbacks = []
     if args.enable_checkpointing:
-        checkpoint_dir = f"checkpoints/{args.run_name}/"
-        callbacks.append(ModelCheckpoint(
-            monitor=args.checkpoint_metric,
-            dirpath=checkpoint_dir,
-            filename="ep{epoch:02d}_{" + args.checkpoint_metric + ":.2f}f1",
-            save_top_k=args.checkpoint_save_count,
-            mode="max",
-            auto_insert_metric_name=False
-        ))
+        dt = datetime.now().strftime("%Y%m%d-%H%M%S")
+        checkpoint_dir = f'checkpoints/{args.run_name}/{dt}/'
+        callbacks.append(
+            ModelCheckpoint(
+                dirpath=checkpoint_dir,
+                filename="ep_{epoch:02d}",
+                every_n_epochs=1,
+                save_top_k=-1,
+            )
+        )
     else:
         assert not args.run_final_mwe_eval, "Can't run final MWE eval with checkpointing disabled"
 
@@ -227,7 +231,6 @@ def main():
 
     if args.remove_checkpoint_dir:
         shutil.rmtree(checkpoint_dir)
-
 
 
 def load_best_model(checkpoint_dir: str) -> ContextDictionaryBiEncoder:

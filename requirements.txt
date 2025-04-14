@@ -1,4 +1,5 @@
 # core
+pytest
 torch~=1.10
 transformers~=4.1
 pytorch-lightning~=1.5

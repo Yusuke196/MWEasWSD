@@ -50,10 +50,11 @@ class WordnetDefinitionLookup:
     @classmethod
     def get_ordered_synsets(cls, lemma: str, pos: str, ignore_candidates: bool = False) -> List:
         if cls._candidate_synsets is not None and not ignore_candidates:
+            raise NotImplementedError
             return cls._candidate_synsets[(lemma, pos)]
         else:
             # sort this so it always come out in the same order (not clear if wordnet guarantees order)
-            return sorted(wordnet.synsets(lemma, pos))
+            return sorted(wordnet.synsets(lemma))
 
     @staticmethod
     def process_definition(definition: Union[str, List], lang: str) -> str:
